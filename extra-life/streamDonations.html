@@ -1,0 +1,62 @@
+<script>
+// Configuration
+var checkFrequency = 30; // in seconds
+var donorDriveID = 'IDNUMBER'; // replace with your DonorDrive ID
+
+// Donations JSON data page update
+function getNewDonations(t_str, donorDriveID) {
+	
+  // Extra Life API call
+  var streamTime = t_str;
+  var requestURL = `https://extra-life.org/api/participants/${donorDriveID}/donations?where=createdDateUTC%3E%27${streamTime}%27`;
+  var request = new XMLHttpRequest();
+  request.open('GET', requestURL);
+  request.send();
+  request.onload = function() {
+	
+	// Load data to variables
+    var data = request.response;
+    var jsondata = JSON.parse(data);
+    var numDonations = jsondata.length;
+    var sumDonations = 0;
+      
+    // Loop through donations
+    for (var donation_i=0; donation_i<numDonations; donation_i++) {
+		
+	  // Get amount and update running total
+      sumDonations += jsondata[donation_i].amount;
+    }
+    
+    // Update HTML span
+    document.getElementById("donationsThusFar").innerHTML = sumDonations;
+  }
+};
+
+// Get current time variables
+var currentDateTime = new Date();
+var year = currentDateTime.getFullYear();
+var month = currentDateTime.getMonth()+1;
+var day = currentDateTime.getDate();
+var hour = currentDateTime.getHours();
+var minute = currentDateTime.getMinutes();
+var second = currentDateTime.getSeconds();
+
+// Add placeholder zero for months through seconds
+if (month < 10) { month = "0" + month; }
+if (day < 10) { day = "0" + day; }
+if (hour < 10) { hour = "0" + hour; }
+if (minute < 10) { minute = "0" + minute; }
+if (second < 10) { second = "0" + second; }
+
+// Build datetime string and update html
+var t_str = year+"-"+month+"-"+day+"T"+hour+":"+minute+":"+second;
+
+// Update donations data on pageload
+getNewDonations(t_str, donorDriveID);
+// ... and reguarly based on checkFrequency (in millisec)
+setInterval(getNewDonations(t_str, donorDriveID), checkFrequency*1000);
+</script>
+
+<html>
+<p>Donations this stream: <span id=donationsThusFar>null</span></p>
+</html>
